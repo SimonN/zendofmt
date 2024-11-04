@@ -17,6 +17,11 @@ struct Koan {
 
     int textLen() const pure nothrow @safe @nogc
     {
-        return text.length & 0x7FFF_FFFF;
+        return (text.length & 0x0FFF_FFFF) + 2;
+    }
+
+    string asFormatted() const pure nothrow @safe
+    {
+        return isNew ? "* " ~ text : "  " ~ text;
     }
 }

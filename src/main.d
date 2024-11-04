@@ -34,6 +34,7 @@ import std.range;
 import std.stdio;
 import std.string;
 
+import zendofmt.column;
 import zendofmt.koan;
 
 enum filenameWhiteDefault = "koans-w.txt";
@@ -92,14 +93,6 @@ class Koans {
 
     Koan[] raw_koans; // not yet formatted
 
-    private static class Column {
-        Koan[] koans;
-        int  maxlen;
-        bool last_full;
-
-        alias koans this;
-    }
-
     immutable spacing =  2; // min spaces between columns
     immutable maxchar = 80; // lines must be smaller than this
 
@@ -143,20 +136,20 @@ class Koans {
         Column[] columns = columnize();
 
         // output the columns, we iterate row-wise however
-        for (int row = 0; row < columns[0].length; ++row) {
+        for (int row = 0; row < columns[0].numKoans; ++row) {
             foreach (size_t j, col; columns) {
-                if (row >= col.length) continue;
+                if (row >= col.numKoans) continue;
 
-                auto koan  = col[row];
+                auto koan  = col.koans[row];
                 bool endl  = (j + 1 == columns.length
                            || j + 2 == columns.length
-                           && row >= columns[$-1].length);
+                           && row >= columns[$-1].numKoans);
 
-                write(koan.isNew ? "[b]" : "",
-                      koan.text,
-                      koan.isNew ? "[/b]" : "",
-                      endl  ? "\n"       : "",
-                    ' '.repeat((!endl)*(col.maxlen + spacing - koan.textLen)));
+                write(koan.asFormatted,
+                    endl ? "\n" : "",
+                    ' '.repeat((!endl) * (
+                        col.textLen + spacing - koan.textLen
+                    )));
             }
         }
         writeln("[/tt]");
@@ -185,8 +178,6 @@ class Koans {
 
             Column[] ret;
             ret.length = maxcol;
-            foreach (ref col; ret)
-                col = new Column();
 
             if (vert_size * maxcol == koanmax)
                 ret[$-1].last_full = true;
@@ -195,17 +186,14 @@ class Koans {
 
             // fill these columns with koans
             foreach (size_t k, ref koan; raw_koans) {
-                size_t cur_col = k / vert_size;
+                immutable size_t cur_col = k / vert_size;
                 assert (cur_col < maxcol);
-                ret[cur_col] ~= koan;
-                ret[cur_col].maxlen = max(ret[cur_col].maxlen, koan.textLen);
+                ret[cur_col].koans ~= koan;
             }
             // are these columns narrow enough to be returned?
-            int total_length = (-spacing); // last column doesn't get spaces
-            foreach (col; ret)
-                total_length += col.maxlen + spacing;
-            if (total_length < maxchar)
+            if (ret.map!(col => col.textLen).sum < maxchar) {
                 return ret;
+            }
             // if not, do another iteration with ++vert_size
         }
     }
