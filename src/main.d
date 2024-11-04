@@ -36,33 +36,37 @@ import std.string;
 
 import zendofmt.koan;
 
-void main(string[] args)
+enum filenameWhiteDefault = "koans-w.txt";
+enum filenameBlackDefault = "koans-b.txt";
+
+int main(string[] args)
 {
-    string filename_w = "koans-w.txt";
-    string filename_b = "koans-b.txt";
+    string fnWhite = filenameWhiteDefault;
+    string fnBlack = filenameBlackDefault;
 
     try {
-        process_args(args, filename_w, filename_b);
+        process_args(args, fnWhite, fnBlack);
 
-        auto koans_w = new Koans(filename_w);
-        auto koans_b = new Koans(filename_b);
+        auto koans_w = new Koans(fnWhite);
+        auto koans_b = new Koans(fnBlack);
 
         koans_w.outputWithTitle("White koans:");
         koans_b.outputWithTitle("Black koans:");
     }
     catch (Exception e) {
         usage();
-        writeln("\n", e.msg);
-        return;
+        writeln("\nError:\n", e.msg);
+        return 1;
     }
+    return 0;
 }
-
-
 
 void usage()
 {
     writeln("Zendo koan list formatter");
-    writeln("List koans in `koans-w.txt' and `koans-b.txt' and run this.");
+    writeln(`List koans in "`,
+        filenameWhiteDefault, `" and in "`,
+        filenameBlackDefault, `" and run this.`);
     writeln("Alternatively, use other filenames, and pass them as arguments.");
     writeln();
     writeln("Rules for these koan lists:");
@@ -70,8 +74,6 @@ void usage()
     writeln(" * Insert an empty line to mark subsequent koans as new (bold).");
     writeln(" * If you don't have any new koans, end with an empty line.");
 }
-
-
 
 void process_args(string[] args, ref string fw, ref string fb)
 {
@@ -90,7 +92,7 @@ class Koans {
 
     Koan[] raw_koans; // not yet formatted
 
-    private class Column {
+    private static class Column {
         Koan[] koans;
         int  maxlen;
         bool last_full;
@@ -131,8 +133,6 @@ class Koans {
         raw_koans = raw_koans.sort().uniq().array();
     }
 
-
-
     void outputWithTitle(in string title)
     {
         if (raw_koans.length == 0) {
@@ -161,8 +161,6 @@ class Koans {
         }
         writeln("[/tt]");
     }
-
-
 
     Column[] columnize()
     {
@@ -211,5 +209,4 @@ class Koans {
             // if not, do another iteration with ++vert_size
         }
     }
-
 }
