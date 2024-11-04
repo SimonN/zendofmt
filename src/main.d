@@ -25,14 +25,16 @@
  * the files however you want, and give them to this program as arguments.
  */
 
-module zendoformat;
+module zendofmt.main;
 
 import std.algorithm;
-import std.range;
 import std.conv;
 import std.math;
+import std.range;
 import std.stdio;
 import std.string;
+
+import zendofmt.koan;
 
 void main(string[] args)
 {
@@ -45,12 +47,8 @@ void main(string[] args)
         auto koans_w = new Koans(filename_w);
         auto koans_b = new Koans(filename_b);
 
-        writeln("White koans:");
-        koans_w.output();
-        writeln();
-
-        writeln("Black koans:");
-        koans_b.output();
+        koans_w.outputWithTitle("White koans:");
+        koans_b.outputWithTitle("Black koans:");
     }
     catch (Exception e) {
         usage();
@@ -92,19 +90,6 @@ class Koans {
 
     Koan[] raw_koans; // not yet formatted
 
-    class Koan {
-        string text;
-        bool   mark_as_new = false;
-        alias text this;
-
-        this(string s = "", bool b = false) { text = s; mark_as_new = b; }
-
-        alias opCmp = Object.opCmp;
-        int opCmp(Koan rhs) {
-            return text < rhs.text ? -1 : text > rhs.text ? 1 : 0;
-        }
-    }
-
     private class Column {
         Koan[] koans;
         int  maxlen;
@@ -119,9 +104,6 @@ class Koans {
     static int acceptable_vert_size = 10; // up to this, prefer long vertical
                                           // list instead of many rows
 
-    immutable mark_new_1 = "[b]";
-    immutable mark_new_2 = "[/b]";
-
     this(string fn)
     {
         auto f = File(fn, "r");
@@ -132,30 +114,32 @@ class Koans {
             if (s.length == 0) {
                 any_newline_at_all = true;
                 foreach (ref koan; raw_koans.retro) {
-                    if (koan.mark_as_new)
-                        koan.mark_as_new = false;
+                    if (koan.isNew)
+                        koan.isNew = false;
                     else
                         break;
                 }
             }
             else
-                raw_koans ~= new Koan(line.strip(), true);
+                raw_koans ~= Koan(line.strip(), true);
         }
-        if (! any_newline_at_all)
+        if (! any_newline_at_all) {
             foreach (ref koan; raw_koans)
-                koan.mark_as_new = false;
+                koan.isNew = false;
+        }
 
         raw_koans = raw_koans.sort().uniq().array();
     }
 
 
 
-    void output()
+    void outputWithTitle(in string title)
     {
         if (raw_koans.length == 0) {
             writeln("(no koans)");
             return;
         }
+        writeln(title, "[tt]");
         Column[] columns = columnize();
 
         // output the columns, we iterate row-wise however
@@ -164,21 +148,18 @@ class Koans {
                 if (row >= col.length) continue;
 
                 auto koan  = col[row];
-                bool bold  = koan.mark_as_new == true;
-                bool first = (row == 0 && j == 0);
-                bool last  = (row + 1 == col.length && col.last_full);
                 bool endl  = (j + 1 == columns.length
                            || j + 2 == columns.length
                            && row >= columns[$-1].length);
 
-                write(first ? "[tt]"     : "",
-                      bold  ? mark_new_1 : "", koan,
-                      bold  ? mark_new_2 : "",
-                      last  ? "[/tt]"    : "",
+                write(koan.isNew ? "[b]" : "",
+                      koan.text,
+                      koan.isNew ? "[/b]" : "",
                       endl  ? "\n"       : "",
-                    ' '.repeat((!endl)*(col.maxlen + spacing - koan.length)));
+                    ' '.repeat((!endl)*(col.maxlen + spacing - koan.textLen)));
             }
         }
+        writeln("[/tt]");
     }
 
 
@@ -215,12 +196,11 @@ class Koans {
                 ret[$-2].last_full = true;
 
             // fill these columns with koans
-            foreach (size_t k, koan; raw_koans) {
+            foreach (size_t k, ref koan; raw_koans) {
                 size_t cur_col = k / vert_size;
                 assert (cur_col < maxcol);
                 ret[cur_col] ~= koan;
-                ret[cur_col].maxlen = max(ret[cur_col].maxlen,
-                                          koan.length.to!int);
+                ret[cur_col].maxlen = max(ret[cur_col].maxlen, koan.textLen);
             }
             // are these columns narrow enough to be returned?
             int total_length = (-spacing); // last column doesn't get spaces
