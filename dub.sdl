@@ -1,0 +1,5 @@
+name "zendofmt"
+description "Koan Formatter for Forum Zendo"
+authors "Simon N."
+copyright "Public domain"
+license "CC0"
