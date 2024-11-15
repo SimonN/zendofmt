@@ -6,7 +6,6 @@ import zendofmt.koan;
 
 struct Column {
     Koan[] koans;
-    bool last_full;
 
     int numKoans() const pure nothrow @safe @nogc
     {

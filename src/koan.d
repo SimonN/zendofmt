@@ -22,6 +22,20 @@ struct Koan {
 
     string asFormatted() const pure nothrow @safe
     {
-        return isNew ? "* " ~ text : "  " ~ text;
+        return (isNew ? "* " : "  ") ~ text;
     }
+}
+
+unittest {
+    import std.algorithm;
+
+    const koans = [
+        Koan("A", true),
+        Koan("AA", false),
+        Koan("AB", true),
+        Koan("BA", false),
+        Koan("C"),
+        Koan("CA"),
+    ];
+    assert (koans.isSorted);
 }

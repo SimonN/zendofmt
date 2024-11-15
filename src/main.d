@@ -179,11 +179,6 @@ class Koans {
             Column[] ret;
             ret.length = maxcol;
 
-            if (vert_size * maxcol == koanmax)
-                ret[$-1].last_full = true;
-            else
-                ret[$-2].last_full = true;
-
             // fill these columns with koans
             foreach (size_t k, ref koan; raw_koans) {
                 immutable size_t cur_col = k / vert_size;
