@@ -75,7 +75,7 @@ public:
                     koan.asFormatted,
                     endl ? "\n" : "",
                     ' '.repeat((!endl) * (col.textLen + spacing - koan.textLen)
-                        ).text);
+                    ));
             }
         }
         ret ~= "[/tt]";
