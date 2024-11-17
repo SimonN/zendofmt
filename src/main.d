@@ -15,6 +15,7 @@ module zendofmt.main;
 import std.stdio;
 
 import zendofmt.table;
+import zendofmt.versioning;
 
 int main(string[] args)
 {
@@ -36,7 +37,9 @@ int main(string[] args)
 
 void usage()
 {
-    writeln("zendofmt - Forum Zendo koan list formatter");
+    writeln("zendofmt ",
+        ourVersion.asString,
+        " - Forum Zendo koan list formatter");
     writeln(`List koans in "`,
         CmdArgs.init.filenameWhite, `" and in "`,
         CmdArgs.init.filenameBlack, `" and run this.`);

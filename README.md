@@ -17,6 +17,10 @@ SMF 2.x message board.
 Build Instructions
 ------------------
 
+You can use my [binary releases for Windows or Linux
+](https://github.com/SimonN/zendofmt/releases)
+or build from source yourself:
+
 1. Install a D compiler, e.g., DMD or LDC. Both of them ship with dub.
 2. Clone the zendofmt repository.
 3. In zendofmt's root directory, run: `$ dub`
@@ -31,6 +35,13 @@ Usage
     first remove all empty lines from these files, then append an empty line,
     then add the new words below that new empty line.
 4. Rerun `$ ./zendofmt` to get the newly added words marked with asterisks.
+
+License/Copying
+---------------
+
+This software is placed in the public domain via the
+[CC0 Public Domain Dedication, Version 1.0
+](https://creativecommons.org/publicdomain/zero/1.0/).
 
 Based on: Zendo
 ---------------
