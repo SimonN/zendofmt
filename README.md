@@ -11,15 +11,17 @@ at least one double letter, and black otherwise."
 
 Players post words, and the host classifies each word publicly as
 white or black according to the prefixed rule. zendofmt helps the host
-of a game of Forum Zendo to format the two word lists for posting to a
+of a game of Forum Zendo to format the two word lists for posting to an
 SMF 2.x message board.
+
+Download
+--------
+
+I've released [standalone exetucables for Windows or
+Linux](https://github.com/SimonN/zendofmt/releases).
 
 Build Instructions
 ------------------
-
-You can use my [binary releases for Windows or Linux
-](https://github.com/SimonN/zendofmt/releases)
-or build from source yourself:
 
 1. Install a D compiler, e.g., DMD or LDC. Both of them ship with dub.
 2. Clone the zendofmt repository.
@@ -39,9 +41,8 @@ Usage
 License/Copying
 ---------------
 
-This software is placed in the public domain via the
-[CC0 Public Domain Dedication, Version 1.0
-](https://creativecommons.org/publicdomain/zero/1.0/).
+This software is placed in the public domain via the [CC0 Public Domain
+Dedication, Version 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
 
 Based on: Zendo
 ---------------
