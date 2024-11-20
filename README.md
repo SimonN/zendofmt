@@ -38,6 +38,10 @@ Usage
     then add the new words below that new empty line.
 4. Rerun `$ ./zendofmt` to get the newly added words marked with asterisks.
 
+Optionally, create a third file `footer.txt` with free-form text
+that will appear below the two koan lists. Backticks `` ` `` in `footer.txt`
+will appear as `[tt]` and `[/tt]` alternately. Linebreaks will appear as-is.
+
 License/Copying
 ---------------
 
