@@ -1,0 +1,1 @@
+./zendofmt.exe > output.txt

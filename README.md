@@ -32,11 +32,12 @@ Usage
 
 1. Create two files `koans-w.txt` and `koans-b.txt` in the same directory
     as the executable. In each file, list one word per line.
-2. Run: `$ ./zendofmt`
+2.  * On Windows, double-click `win-runme.bat`, then look at `output.txt`.
+    * Or, anywhere with a command line, run `$ ./zendofmt` without arguments.
 3. The next time you add new words to the `koans-*.txt` files,
     first remove all empty lines from these files, then append an empty line,
     then add the new words below that new empty line.
-4. Rerun `$ ./zendofmt` to get the newly added words marked with asterisks.
+4. Repeat step 2. Newly added words will be marked with asterisks.
 
 Optionally, create a third file `footer.txt` with free-form text
 that will appear below the two koan lists. Backticks `` ` `` in `footer.txt`
