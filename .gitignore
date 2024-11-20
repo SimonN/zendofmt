@@ -12,6 +12,7 @@ zendofmt.dll
 zendofmt.a
 zendofmt.lib
 zendofmt-test-*
+*-linux64
 *.exe
 *.pdb
 *.o
