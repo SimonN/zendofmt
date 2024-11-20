@@ -2,7 +2,7 @@ module zendofmt.versioning;
 
 import std.conv;
 
-enum Version ourVersion = Version(1, 0, 0);
+enum Version ourVersion = Version(1, 1, 0);
 
 struct Version {
     int major;
