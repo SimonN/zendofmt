@@ -12,7 +12,19 @@ struct Koan {
 
     int opCmp(ref const Koan rhs) const pure nothrow @safe @nogc
     {
-        return text < rhs.text ? -1 : text > rhs.text ? 1 : 0;
+        return text < rhs.text ? -1
+            :  text > rhs.text ? 1
+            :  rhs.isNew - isNew; // Sort the new first, that's for uniq later
+        /*
+         * With this behavior -- sorting new koans earlier than old koans --,
+         * the predicate for uniq (in a sort.uniq.array) pipeline can then be:
+         * a.text == b.text. The predicate can ignore new/old.
+         */
+    }
+
+    static bool predicateForUniq(in Koan a, in Koan b) pure nothrow @safe @nogc
+    {
+        return a.text == b.text;
     }
 
     int textLen() const pure nothrow @safe @nogc

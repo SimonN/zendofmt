@@ -41,7 +41,10 @@ public:
                 raw_koans ~= Koan(line.strip(), weHaveSeenANewline);
             }
         }
-        raw_koans = raw_koans.sort().uniq().array();
+        raw_koans = raw_koans
+            .sort
+            .uniq!(Koan.predicateForUniq)
+            .array;
     }
 
     int numKoans() const pure nothrow @safe @nogc
