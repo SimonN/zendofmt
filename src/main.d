@@ -31,7 +31,6 @@ int main(string[] args)
 
         const footer = new Footer(options.filenameFooter);
         if (footer.exists) {
-            writeln;
             footer.asFormatted.writeln;
         }
     }
