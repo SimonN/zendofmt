@@ -105,6 +105,14 @@ private:
                 // These columns are finally narrow enough (horizontally).
                 return ret;
             }
+            if (ret.length == 1) {
+                /*
+                 * This output will be too wide horizontally, but we're
+                 * already printing everything into a single long column.
+                 * We can't improve that; accept it.
+                 */
+                return ret;
+            }
         }
     }
 
