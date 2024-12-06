@@ -14,8 +14,8 @@ class KoanTable {
 private:
     Koan[] raw_koans; // not yet formatted
 
-    immutable spacing =  2; // min spaces between columns
-    immutable maxchar = 80; // lines must be smaller than this
+    immutable minSpacingBetweenKoans = 2;
+    immutable maxCharactersPerLine = 80;
 
     // Up to this, prefer a long vertical list instead of many rows.
     enum int niceColumnLengthBeforeMakingMultipleColumns = 10;
@@ -68,17 +68,23 @@ public:
          */
         for (int row = 0; row < columns[0].numKoans; ++row) {
             foreach (size_t j, col; columns) {
-                if (row >= col.numKoans) continue;
-                auto koan  = col.koans[row];
-                bool endl  = (j + 1 == columns.length
-                           || j + 2 == columns.length
-                           && row >= columns[$-1].numKoans);
+                if (row >= col.numKoans) {
+                    continue;
+                }
+                immutable koan = col.koans[row];
+                immutable bool isLastInItsRow
+                    =  (j + 1 == columns.length)
+                    || (j + 2 == columns.length
+                        && row >= columns[$-1].numKoans);
+
+                immutable numSpacesOfPaddingAfterTheKoan
+                    = isLastInItsRow ? 0
+                    : col.textWidth + minSpacingBetweenKoans - koan.textLen;
 
                 ret ~= text(
                     koan.asFormatted,
-                    endl ? "\n" : "",
-                    ' '.repeat((!endl) * (col.textLen + spacing - koan.textLen)
-                    ));
+                    ' '.repeat(numSpacesOfPaddingAfterTheKoan),
+                    isLastInItsRow ? "\n" : "");
             }
         }
         ret ~= "[/tt]";
@@ -101,7 +107,7 @@ private:
 
         for (int vertSize = bestVertSizeIfWeHadInfiniteWidth(); ; ++vertSize) {
             Column[] ret = columnizeForVertSize(vertSize);
-            if (ret.map!(col => col.textLen).sum < maxchar) {
+            if (ret.map!(col => col.textWidth).sum < maxCharactersPerLine) {
                 // These columns are finally narrow enough (horizontally).
                 return ret;
             }

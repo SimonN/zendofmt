@@ -12,7 +12,7 @@ struct Column {
         return koans.length & 0x7FFF_FFFF;
     }
 
-    int textLen() const pure nothrow @safe @nogc
+    int textWidth() const pure nothrow @safe @nogc
     {
         return koans.map!(k => k.textLen).fold!max(0);
     }
@@ -23,5 +23,5 @@ unittest {
     c.koans ~= Koan("HI");
     c.koans ~= Koan("HELLO");
     c.koans ~= Koan("FOO");
-    assert (c.textLen == Koan("HELLO").textLen);
+    assert (c.textWidth == Koan("HELLO").textLen);
 }
