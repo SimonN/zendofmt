@@ -2,80 +2,68 @@ module zendofmt.table;
 
 import std.algorithm;
 import std.conv;
-import std.math;
+import std.exception;
 import std.range;
-import std.stdio : File, lines;
-import std.string;
 
 import zendofmt.column;
 import zendofmt.koan;
 
 class KoanTable {
 private:
-    Koan[] raw_koans; // not yet formatted
-
     enum minSpacingBetweenKoans = 2;
     enum maxCharactersPerLine = 80;
 
-    // Up to this, prefer a long vertical list instead of many rows.
-    enum int niceColumnLengthBeforeMakingMultipleColumns = 10;
+    immutable(Koan)[] _rawKoans;
+    immutable(Column)[] _columns;
 
 public:
-    this(string fn)
+    this(immutable(Koan)[] toPrint, in int idealVertSize)
     {
-        auto f = File(fn, "r");
-        bool weHaveSeenANewline = false;
-
-        foreach (string line; f.lines) {
-            string s = line.strip();
-            if (s.length == 0) {
-                weHaveSeenANewline = true;
-                foreach (ref koan; raw_koans.retro) {
-                    if (koan.isNew)
-                        koan.isNew = false;
-                    else
-                        break;
-                }
-            }
-            else {
-                raw_koans ~= Koan(line.strip(), weHaveSeenANewline);
-            }
-        }
-        raw_koans = raw_koans
-            .sort
-            .uniq!(Koan.predicateForUniq)
-            .array;
+        _rawKoans = toPrint;
+        _columns = columnize(toPrint, idealVertSize);
     }
 
     int numKoans() const pure nothrow @safe @nogc
     {
-        return raw_koans.length & 0x7FFF_FFFF;
+        return _rawKoans.length & 0x7FFF_FFFF;
     }
 
-    string asFormattedWithTitle(in string title)
+    int numColumns() const pure nothrow @safe @nogc
     {
-        if (raw_koans.length == 0) {
-            return text(title, "\n[i]no koans[/i]");
-        }
-        auto ret = text(title, "[tt]\n");
-        Column[] columns = columnize();
+        return _columns.length & 0x7FFF_FFFF;
+    }
 
+    int vertSize() const pure nothrow @safe @nogc
+    {
+        return _columns.empty ? 0 : _columns[0].numKoans;
+    }
+
+    /*
+     * We expect that our caller has opened a [tt] tag.
+     * We'll print preformatted output for such a tag.
+     * We expect that our caller will close the [tt] tag after us.
+     */
+    string asFormatted() const pure @safe
+    {
+        if (_columns.empty) {
+            return "";
+        }
+        string ret;
         /*
          * Columns collect the koans column-wise; each column contains
          * alphabetically successive koans (slices of the table's koan list).
          *
          * But we output row-wise.
          */
-        for (int row = 0; row < columns[0].numKoans; ++row) {
-            foreach (size_t j, col; columns) {
+        for (int row = 0; row < _columns[0].numKoans; ++row) {
+            foreach (size_t j, col; _columns) {
                 if (row >= col.numKoans) {
                     continue;
                 }
                 immutable koan = col.koans[row];
                 immutable bool isLastInItsRow
-                    =  (j + 1 == columns.length)
-                    || (j + 2 == columns.length
-                        && row >= columns[$-1].numKoans);
+                    =  (j + 1 == numColumns)
+                    || (j + 2 == numColumns && row >= _columns[$-1].numKoans);
 
                 immutable numSpacesOfPaddingAfterTheKoan
                     = isLastInItsRow ? 0
@@ -87,7 +75,6 @@ public:
                     isLastInItsRow ? "\n" : "");
             }
         }
-        ret ~= "[/tt]";
         return ret;
     }
 
@@ -100,13 +87,18 @@ private:
      * 1 4      The rightmost column may have fewer entries than others.
      * 2 5
      */
-    Column[] columnize() const pure nothrow @safe
+    immutable(Column)[] columnize(
+        immutable(Koan)[] raw_koans,
+        in int idealVertSize,
+    ) const pure nothrow @safe
     {
-        if (! raw_koans.length)
+        if (numKoans == 0)
             return null;
 
-        for (int vertSize = bestVertSizeIfWeHadInfiniteWidth(); ; ++vertSize) {
-            Column[] ret = columnizeForVertSize(vertSize);
+        for (int vertSize = bestVertSizeIfWeHadInfiniteWidth(idealVertSize);
+            ; ++vertSize)
+        {
+            immutable(Column)[] ret = columnizeForVertSize(vertSize);
             if (isNarrowEnough(ret)) {
                 return ret;
             }
@@ -132,23 +124,27 @@ private:
         return withWithSpacing < maxCharactersPerLine;
     }
 
-    int bestVertSizeIfWeHadInfiniteWidth() const pure nothrow @safe @nogc
+    int bestVertSizeIfWeHadInfiniteWidth(
+        in int idealVertSize
+    ) const pure nothrow @safe @nogc
     {
         for (int numColumns = 1; ; ++numColumns) {
             immutable vertSize = (numKoans + (numColumns - 1)) / numColumns;
-            if (vertSize <= niceColumnLengthBeforeMakingMultipleColumns) {
+            if (vertSize <= idealVertSize) {
                 return vertSize;
             }
         }
     }
 
-    Column[] columnizeForVertSize(in int vertSize) const pure nothrow @safe
+    immutable(Column)[] columnizeForVertSize(
+        in int vertSize
+    ) const pure nothrow @trusted
     in { assert (vertSize >= 1); }
     do {
         Column[] ret;
-        ret.length = (raw_koans.length + vertSize - 1) / vertSize;
+        ret.length = (numKoans + vertSize - 1) / vertSize;
         columnizeInto(ret, vertSize);
-        return ret;
+        return ret.assumeUnique;
     }
 
     void columnizeInto(
@@ -159,9 +155,9 @@ private:
             return;
         }
         foreach (size_t col; 0 .. output.length - 1) {
-            output[col].koans = raw_koans[vertSize * col
+            output[col].koans = _rawKoans[vertSize * col
                                        .. vertSize * (col + 1)];
         }
-        output[$-1].koans = raw_koans[vertSize * (output.length - 1) .. $];
+        output[$-1].koans = _rawKoans[vertSize * (output.length - 1) .. $];
     }
 }

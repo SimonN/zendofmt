@@ -16,15 +16,15 @@ import std.conv : text;
 import std.stdio;
 
 import zendofmt.footer;
-import zendofmt.table;
+import zendofmt.fromfile;
 import zendofmt.versioning;
 
 int main(string[] args)
 {
     try {
         const options = processCommandLineArgs(args);
-        auto koansW = new KoanTable(options.filenameWhite);
-        auto koansB = new KoanTable(options.filenameBlack);
+        auto koansW = new KoansFromFile(options.filenameWhite);
+        auto koansB = new KoansFromFile(options.filenameBlack);
 
         koansW.asFormattedWithTitle("White koans:").writeln;
         koansB.asFormattedWithTitle("Black koans:").writeln;

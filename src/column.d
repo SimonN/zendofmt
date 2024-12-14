@@ -5,7 +5,7 @@ import std.algorithm;
 import zendofmt.koan;
 
 struct Column {
-    const(Koan)[] koans;
+    immutable(Koan)[] koans;
 
     int numKoans() const pure nothrow @safe @nogc
     {
