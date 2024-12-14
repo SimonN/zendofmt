@@ -14,8 +14,8 @@ class KoanTable {
 private:
     Koan[] raw_koans; // not yet formatted
 
-    immutable minSpacingBetweenKoans = 2;
-    immutable maxCharactersPerLine = 80;
+    enum minSpacingBetweenKoans = 2;
+    enum maxCharactersPerLine = 80;
 
     // Up to this, prefer a long vertical list instead of many rows.
     enum int niceColumnLengthBeforeMakingMultipleColumns = 10;
@@ -107,8 +107,7 @@ private:
 
         for (int vertSize = bestVertSizeIfWeHadInfiniteWidth(); ; ++vertSize) {
             Column[] ret = columnizeForVertSize(vertSize);
-            if (ret.map!(col => col.textWidth).sum < maxCharactersPerLine) {
-                // These columns are finally narrow enough (horizontally).
+            if (isNarrowEnough(ret)) {
                 return ret;
             }
             if (ret.length == 1) {
@@ -120,6 +119,17 @@ private:
                 return ret;
             }
         }
+    }
+
+    static bool isNarrowEnough(in Column[] cols) pure nothrow @safe @nogc
+    {
+        if (cols.length == 0) {
+            return true;
+        }
+        immutable widthWithoutSpacing = cols.map!(col => col.textWidth).sum;
+        immutable withWithSpacing = widthWithoutSpacing
+            + (cols.length - 1) * minSpacingBetweenKoans;
+        return withWithSpacing < maxCharactersPerLine;
     }
 
     int bestVertSizeIfWeHadInfiniteWidth() const pure nothrow @safe @nogc
