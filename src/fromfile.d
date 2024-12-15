@@ -10,69 +10,55 @@ import std.string;
 import zendofmt.koan;
 import zendofmt.table;
 
-class KoansFromFile {
-private:
-    immutable(Koan)[] raw_koans; // not yet formatted
-
-public:
-    this(string fn)
-    {
-        auto f = File(fn, "r");
-        bool weHaveSeenANewline = false;
-        Koan[] alreadyReadFromFile;
-
-        foreach (string line; f.lines) {
-            string s = line.strip();
-            if (s.length == 0) {
-                weHaveSeenANewline = true;
-                foreach (ref koan; alreadyReadFromFile.retro) {
-                    if (koan.isNew)
-                        koan.isNew = false;
-                    else
-                        break;
-                }
-            }
-            else {
-                alreadyReadFromFile ~= Koan(line.strip(), weHaveSeenANewline);
-            }
-        }
-        raw_koans = alreadyReadFromFile
-            .sort
-            .uniq!(Koan.predicateForUniq)
-            .array
-            .assumeUnique;
-    }
-
-    int numKoans() const pure nothrow @safe @nogc
-    {
-        return raw_koans.length & 0x7FFF_FFFF;
-    }
-
-    string asFormattedWithTitle(in string title)
-    {
-        if (raw_koans.length == 0) {
-            return text(title, "\n[i]no koans[/i]");
-        }
-        return text(
-            title, "[tt]\n",
-            theBestLayout().asFormatted,
-            "[/tt]");
-    }
+string formatKoansFromFile(in string fn, in string title)
+{
+    const koans = parseKoansFromFile(fn);
+    const layout = theBestLayoutFor(koans);
+    return layout.asFormattedWithTitle(title);
+}
 
 private:
-    Layout theBestLayout()
-    {
-        Layout one = new AllInOne(raw_koans, 10);
-        if (one.heedsIdealSize) {
-            return one;
+
+immutable(Koan)[] parseKoansFromFile(in string fn)
+{
+    auto f = File(fn, "r");
+    bool weHaveSeenANewline = false;
+    Koan[] alreadyReadFromFile;
+
+    foreach (string line; f.lines) {
+        string s = line.strip();
+        if (s.length == 0) {
+            weHaveSeenANewline = true;
+            foreach (ref koan; alreadyReadFromFile.retro) {
+                if (koan.isNew)
+                    koan.isNew = false;
+                else
+                    break;
+            }
         }
-        Layout twoA = new TwoTables(raw_koans, 10, 16); // Nice narrow columns
-        Layout twoB = new TwoTables(raw_koans, 10, 26);
-        return one.vertSize < twoA.vertSize && one.vertSize < twoB.vertSize
-            ? one
-            : twoB.vertSize < twoA.vertSize
-            ? twoB : twoA;
+        else {
+            alreadyReadFromFile ~= Koan(line.strip(), weHaveSeenANewline);
+        }
     }
+    return alreadyReadFromFile
+        .sort
+        .uniq!(Koan.predicateForUniq)
+        .array
+        .assumeUnique;
+}
+
+Layout theBestLayoutFor(immutable(Koan)[] rawKoans)
+{
+    Layout one = new AllInOne(rawKoans, 10);
+    if (one.heedsIdealSize) {
+        return one;
+    }
+    Layout twoA = new TwoTables(rawKoans, 10, 16); // Nice narrow columns
+    Layout twoB = new TwoTables(rawKoans, 10, 26);
+    return one.vertSize < twoA.vertSize && one.vertSize < twoB.vertSize
+        ? one
+        : twoB.vertSize < twoA.vertSize
+        ? twoB : twoA;
 }
 
 abstract class Layout {
@@ -113,6 +99,14 @@ final:
             ret ~= table.asFormatted;
         }
         return ret;
+    }
+
+    string asFormattedWithTitle(in string title) const pure @safe
+    {
+        if (numColumns == 0) {
+            return text(title, "\n[i]no koans[/i]");
+        }
+        return text(title, "[tt]\n", asFormatted, "[/tt]");
     }
 }
 

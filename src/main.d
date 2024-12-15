@@ -23,11 +23,8 @@ int main(string[] args)
 {
     try {
         const options = processCommandLineArgs(args);
-        auto koansW = new KoansFromFile(options.filenameWhite);
-        auto koansB = new KoansFromFile(options.filenameBlack);
-
-        koansW.asFormattedWithTitle("White koans:").writeln;
-        koansB.asFormattedWithTitle("Black koans:").writeln;
+        formatKoansFromFile(options.filenameWhite, "White koans:").writeln;
+        formatKoansFromFile(options.filenameBlack, "Black koans:").writeln;
 
         const footer = new Footer(options.filenameFooter);
         if (footer.exists) {
