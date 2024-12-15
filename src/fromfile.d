@@ -62,12 +62,12 @@ public:
 private:
     Layout theBestLayout()
     {
-        Layout one = new AllInOne(raw_koans);
-        if (one.vertSize <= 10) {
+        Layout one = new AllInOne(raw_koans, 10);
+        if (one.heedsIdealSize) {
             return one;
         }
-        Layout twoA = new TwoTables(raw_koans, 16); // Nice short top columns
-        Layout twoB = new TwoTables(raw_koans, 26);
+        Layout twoA = new TwoTables(raw_koans, 10, 16); // Nice narrow columns
+        Layout twoB = new TwoTables(raw_koans, 10, 26);
         return one.vertSize < twoA.vertSize && one.vertSize < twoB.vertSize
             ? one
             : twoB.vertSize < twoA.vertSize
@@ -78,11 +78,15 @@ private:
 abstract class Layout {
 private:
     immutable(KoanTable)[] _tables;
+    immutable int _idealVertSize;
 
 protected:
-    this(immutable(KoanTable)[] readilyPartitionedTablesToFormat)
-    {
+    this(
+        immutable(KoanTable)[] readilyPartitionedTablesToFormat,
+        in int idealVertSize,
+    ) {
         _tables = readilyPartitionedTablesToFormat;
+        _idealVertSize = idealVertSize;
     }
 
 public:
@@ -90,6 +94,16 @@ final:
     int vertSize() const pure nothrow @safe @nogc
     {
         return _tables.map!(t => t.vertSize).sum;
+    }
+
+    int numColumns() const pure nothrow @safe @nogc
+    {
+        return _tables.map!(t => t.numColumns).fold!max(0);
+    }
+
+    bool heedsIdealSize() const pure nothrow @safe @nogc
+    {
+        return vertSize <= _idealVertSize;
     }
 
     string asFormatted() const pure @safe
@@ -104,16 +118,21 @@ final:
 
 class AllInOne : Layout {
 public:
-    this(immutable(Koan)[] rawKoans)
+    this(immutable(Koan)[] rawKoans, in int idealVertSize)
     {
-        super([new KoanTable(rawKoans, 10)].assumeUnique);
+        super(
+            [new KoanTable(rawKoans, idealVertSize)].assumeUnique,
+            idealVertSize);
     }
 }
 
 class TwoTables : Layout {
 public:
-    this(immutable(Koan)[] rawKoans, in int minLengthForSecondTable)
-    {
+    this(
+        immutable(Koan)[] rawKoans,
+        in int idealVertSize,
+        in int minLengthForSecondTable,
+    ) {
         bool isShort(in Koan k) pure nothrow @safe @nogc
         {
             return k.textLen < minLengthForSecondTable;
@@ -121,8 +140,9 @@ public:
         immutable(Koan)[] shortKs = rawKoans.filter!(k => isShort(k)).array;
         immutable(Koan)[] longKs = rawKoans.filter!(k => ! isShort(k)).array;
         super([
-            new KoanTable(shortKs, 10),
-            new KoanTable(longKs, 1),
-            ].assumeUnique);
+                new KoanTable(shortKs, idealVertSize),
+                new KoanTable(longKs, 1),
+            ].assumeUnique,
+            idealVertSize);
     }
 }
