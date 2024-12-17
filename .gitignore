@@ -1,6 +1,7 @@
 koans-*
 footer.txt
 output.txt
+feed.txt
 
 .dub
 docs.json
